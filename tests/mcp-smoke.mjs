@@ -111,6 +111,18 @@ try {
   );
   assert.equal(guidance.status, "passed");
   assert.ok(guidance.cards.length >= 1);
+  assert.match(guidance.toolchain_version, /moon/);
+
+  const missingGuidanceProject = structured(
+    await request("tools/call", {
+      name: "get_moonbit_guidance",
+      arguments: {
+        project_path: resolve(repositoryRoot, "missing-project"),
+        topic: "退出码",
+      },
+    }),
+  );
+  assert.equal(missingGuidanceProject.status, "invalid_input");
 
   const api = structured(
     await request("tools/call", {
@@ -191,6 +203,46 @@ try {
   assert.match(rejectedInvalid.cases[1].failures.join("\n"), /断言格式无效/);
   assert.match(rejectedInvalid.cases[2].failures.join("\n"), /缺少 equals/);
 
+  const rejectedDuplicate = structured(
+    await request("tools/call", {
+      name: "verify_delivery_contract",
+      arguments: {
+        project_path: repositoryRoot,
+        contract_path: resolve(
+          pluginRoot,
+          "tests",
+          "fixtures",
+          "reject-duplicate.contract.json",
+        ),
+      },
+    }),
+  );
+  assert.equal(rejectedDuplicate.status, "invalid_input");
+  assert.match(rejectedDuplicate.evidence.join("\n"), /id 重复/);
+
+  const rejectedLimits = structured(
+    await request("tools/call", {
+      name: "verify_delivery_contract",
+      arguments: {
+        project_path: repositoryRoot,
+        contract_path: resolve(
+          pluginRoot,
+          "tests",
+          "fixtures",
+          "reject-limits.contract.json",
+        ),
+      },
+    }),
+  );
+  assert.equal(rejectedLimits.status, "failed");
+  assert.deepEqual(
+    rejectedLimits.cases.map((testCase) => testCase.status),
+    ["invalid_input", "invalid_input", "invalid_input"],
+  );
+  assert.match(rejectedLimits.cases[0].failures.join("\n"), /1-60000/);
+  assert.match(rejectedLimits.cases[1].failures.join("\n"), /1-8388608/);
+  assert.match(rejectedLimits.cases[2].failures.join("\n"), /必须是整数/);
+
   const invalid = structured(
     await request("tools/call", {
       name: "check_moonbit_code",
@@ -198,6 +250,33 @@ try {
     }),
   );
   assert.equal(invalid.status, "invalid_input");
+
+  const missingProject = structured(
+    await request("tools/call", {
+      name: "check_moonbit_code",
+      arguments: { project_path: resolve(repositoryRoot, "missing-project"), mode: "check" },
+    }),
+  );
+  assert.equal(missingProject.status, "invalid_input");
+
+  const missingApiProject = structured(
+    await request("tools/call", {
+      name: "lookup_moonbit_api",
+      arguments: {
+        project_path: resolve(repositoryRoot, "missing-project"),
+        symbol: "String::length",
+      },
+    }),
+  );
+  assert.equal(missingApiProject.status, "invalid_input");
+
+  const longSymbol = structured(
+    await request("tools/call", {
+      name: "lookup_moonbit_api",
+      arguments: { project_path: project, symbol: "x".repeat(257) },
+    }),
+  );
+  assert.equal(longSymbol.status, "invalid_input");
 
   assert.ok(parsedLines.every((message) => message.jsonrpc === "2.0"));
   process.stdout.write(`MCP smoke passed with ${parsedLines.length} JSON-RPC responses.\n`);

@@ -1,0 +1,17 @@
+{
+  "version": "1",
+  "cases": [
+    {
+      "id": "same",
+      "program": "node",
+      "args": ["-e", "process.stdout.write('one')"],
+      "exit_code": { "kind": "zero" }
+    },
+    {
+      "id": "same",
+      "program": "node",
+      "args": ["-e", "process.stdout.write('two')"],
+      "exit_code": { "kind": "zero" }
+    }
+  ]
+}

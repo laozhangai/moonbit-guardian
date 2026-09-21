@@ -8,6 +8,9 @@ let max_timeout_ms : Int = 60000
 let default_output_limit : Int = 1048576
 
 ///|
+let max_output_limit : Int = 8388608
+
+///|
 fn json_get(value : Json, key : String) -> Json? {
   match value {
     Object(fields) => fields.get(key)
@@ -64,6 +67,28 @@ fn clip_output(text : String, limit : Int) -> (String, Bool) {
     (text, false)
   } else {
     (text[:limit].to_owned(), true)
+  }
+}
+
+///|
+fn bounded_case_int(
+  value : Json,
+  key : String,
+  default : Int,
+  minimum : Int,
+  maximum : Int,
+) -> (Int, String?) {
+  match json_get(value, key) {
+    None => (default, None)
+    Some(Number(number, ..)) => {
+      let parsed = number.to_int()
+      if parsed < minimum || parsed > maximum {
+        (default, Some("\{key} 必须在 \{minimum}-\{maximum} 之间"))
+      } else {
+        (parsed, None)
+      }
+    }
+    Some(_) => (default, Some("\{key} 必须是整数"))
   }
 }
 
@@ -244,9 +269,21 @@ fn guardian_home() -> String? {
 
 ///|
 async fn get_guidance(args : Json) -> Json {
+  let project_path = json_string(args, "project_path").unwrap_or(".")
+  if !@fs.exists(project_path) {
+    return {
+      "status": "invalid_input",
+      "toolchain_version": null,
+      "cards": [],
+      "evidence": ["项目路径不存在"],
+      "output_truncated": false,
+    }
+  }
   let topic = json_string(args, "topic").unwrap_or("")
   let diagnostic = json_string(args, "diagnostic_code").unwrap_or("")
   let query = if !diagnostic.is_empty() { diagnostic } else { topic }
+  let version = moon_version(project_path)
+  let version_text = json_string(version, "stdout").unwrap_or("")
   let home = match guardian_home() {
     Some(path) => path
     None =>
@@ -286,7 +323,11 @@ async fn get_guidance(args : Json) -> Json {
     } else {
       "passed"
     },
-    "toolchain_version": "moonc v0.10.13 / moon 0.1.20260915",
+    "toolchain_version": if version_text.is_empty() {
+      null
+    } else {
+      version_text
+    },
     "query": query,
     "cards": matched,
     "evidence": [
@@ -299,8 +340,24 @@ async fn get_guidance(args : Json) -> Json {
 ///|
 async fn lookup_api(args : Json) -> Json {
   let project_path = json_string(args, "project_path").unwrap_or(".")
+  if !@fs.exists(project_path) {
+    return {
+      "status": "invalid_input",
+      "toolchain_version": null,
+      "symbol": null,
+      "evidence": ["项目路径不存在"],
+      "output_truncated": false,
+    }
+  }
   let symbol = match json_string(args, "symbol") {
-    Some(value) if !value.is_empty() => value
+    Some(value) if !value.is_empty() && value.length() <= 256 => value
+    Some(_) =>
+      return {
+        "status": "invalid_input",
+        "toolchain_version": null,
+        "evidence": ["symbol 必须是 1-256 个字符"],
+        "output_truncated": false,
+      }
     _ =>
       return {
         "status": "invalid_input",
@@ -330,6 +387,15 @@ async fn lookup_api(args : Json) -> Json {
 ///|
 async fn check_code(args : Json) -> Json {
   let project_path = json_string(args, "project_path").unwrap_or(".")
+  if !@fs.exists(project_path) {
+    return {
+      "status": "invalid_input",
+      "toolchain_version": null,
+      "mode": null,
+      "evidence": ["项目路径不存在"],
+      "output_truncated": false,
+    }
+  }
   let mode = json_string(args, "mode").unwrap_or("check")
   let command_args = match mode {
     "check" => ["check", "--deny-warn", "--output-json"]
@@ -521,13 +587,36 @@ async fn verify_case(project : String, case : Json) -> Json {
     Some("temp") | None => temp
     Some(path) => expand(path)
   }
+  let (timeout_ms, timeout_error) = bounded_case_int(
+    case, "timeout_ms", default_timeout_ms, 1, max_timeout_ms,
+  )
+  let (output_limit, output_limit_error) = bounded_case_int(
+    case, "output_limit", default_output_limit, 1, max_output_limit,
+  )
+  let input_failures : Array[String] = []
+  match timeout_error {
+    Some(reason) => input_failures.push(reason)
+    None => ()
+  }
+  match output_limit_error {
+    Some(reason) => input_failures.push(reason)
+    None => ()
+  }
+  if !input_failures.is_empty() {
+    return {
+      "id": id,
+      "status": "invalid_input",
+      "failures": input_failures,
+      "execution": null,
+    }
+  }
   let execution = run_command(
     program,
     command_args,
     cwd,
     stdin_text?=json_string(case, "stdin"),
-    timeout_ms=clamp_timeout(json_int(case, "timeout_ms")),
-    output_limit=json_int(case, "output_limit").unwrap_or(default_output_limit),
+    timeout_ms~,
+    output_limit~,
   )
   let failures : Array[String] = []
   if json_string(execution, "status") == Some("timed_out") {
@@ -646,6 +735,42 @@ async fn verify_contract(args : Json) -> Json {
         "evidence": ["cases 必须是数组"],
         "output_truncated": false,
       }
+  }
+  if definitions.is_empty() {
+    return {
+      "status": "invalid_input",
+      "toolchain_version": null,
+      "contract_version": "1",
+      "cases": [],
+      "evidence": ["cases 不能是空数组"],
+      "output_truncated": false,
+    }
+  }
+  let seen_ids : Array[String] = []
+  for definition in definitions {
+    let id = match json_string(definition, "id") {
+      Some(value) if !value.is_empty() => value
+      _ =>
+        return {
+          "status": "invalid_input",
+          "toolchain_version": null,
+          "contract_version": "1",
+          "cases": [],
+          "evidence": ["每个用例必须有非空 id"],
+          "output_truncated": false,
+        }
+    }
+    if seen_ids.contains(id) {
+      return {
+        "status": "invalid_input",
+        "toolchain_version": null,
+        "contract_version": "1",
+        "cases": [],
+        "evidence": ["用例 id 重复：\{id}"],
+        "output_truncated": false,
+      }
+    }
+    seen_ids.push(id)
   }
   let results : Array[Json] = []
   let mut passed = 0
