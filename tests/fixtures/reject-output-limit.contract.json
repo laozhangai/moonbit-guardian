@@ -1,0 +1,14 @@
+{
+  "version": "1",
+  "cases": [
+    {
+      "id": "超量输出不能通过",
+      "program": "node",
+      "args": ["-e", "process.stdout.write('x'.repeat(128))"],
+      "output_limit": 32,
+      "exit_code": { "kind": "zero" },
+      "stdout": { "contains": ["x"] },
+      "stderr": { "empty": true }
+    }
+  ]
+}

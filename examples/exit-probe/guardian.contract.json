@@ -1,0 +1,23 @@
+{
+  "version": "1",
+  "cases": [
+    {
+      "id": "成功路径",
+      "program": "moon",
+      "args": ["run", "cmd/main", "--target", "wasm-gc"],
+      "cwd": "project",
+      "exit_code": { "kind": "zero" },
+      "stdout": { "exact": "ready\n" },
+      "stderr": { "empty": true }
+    },
+    {
+      "id": "失败路径返回非零",
+      "program": "moon",
+      "args": ["run", "cmd/main", "--target", "wasm-gc", "--", "--fail"],
+      "cwd": "project",
+      "exit_code": { "kind": "nonzero" },
+      "stdout": { "empty": true },
+      "stderr": { "empty": false }
+    }
+  ]
+}

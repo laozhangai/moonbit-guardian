@@ -1,0 +1,30 @@
+{
+  "version": "1",
+  "cases": [
+    {
+      "id": "fixture 不能逃逸临时目录",
+      "program": "node",
+      "args": ["-e", "process.stdout.write('should-not-run')"],
+      "fixtures": [
+        { "path": "..\\escape.txt", "content": "blocked" }
+      ],
+      "exit_code": { "kind": "zero" }
+    },
+    {
+      "id": "错误断言类型不能被忽略",
+      "program": "node",
+      "args": ["-e", "process.stdout.write('x')"],
+      "exit_code": { "kind": "zero" },
+      "stdout": { "contains": "x" }
+    },
+    {
+      "id": "JSON 断言必须包含 equals",
+      "program": "node",
+      "args": ["-e", "process.stdout.write('{\"ok\":true}')"],
+      "exit_code": { "kind": "zero" },
+      "stdout_json": [
+        { "pointer": "/ok" }
+      ]
+    }
+  ]
+}

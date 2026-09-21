@@ -1,0 +1,38 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-guardian/guardian"
+
+import {
+  "moonbitlang/core/json",
+}
+
+// Values
+pub fn resolve_json_pointer(Json, String) -> Json?
+
+pub fn verify_exit_code(Int, String, exact? : Int) -> String?
+
+pub fn verify_text(String, TextExpectation, stream_name? : String) -> Array[String]
+
+pub let version : String
+
+// Errors
+
+// Types and methods
+pub(all) enum ExecutionStatus {
+  Passed
+  Failed
+  Unsupported
+  TimedOut
+  OutputLimitExceeded
+} derive(Eq, ToJson)
+
+pub(all) struct TextExpectation {
+  exact : String?
+  contains : Array[String]
+  not_contains : Array[String]
+  empty : Bool?
+} derive(Eq, ToJson, @json.FromJson)
+pub fn TextExpectation::empty() -> Self
+
+// Type aliases
+
+// Traits

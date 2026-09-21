@@ -1,0 +1,5 @@
+// import {
+//   "moonbit-guardian/guardian" @lib,
+// }
+
+pkgtype(kind: "executable")

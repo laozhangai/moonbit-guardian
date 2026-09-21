@@ -1,0 +1,18 @@
+{
+  "version": "1",
+  "cases": [
+    {
+      "id": "输出合法 JSON",
+      "program": "moon",
+      "args": ["run", "cmd/main", "--target", "wasm-gc"],
+      "cwd": "project",
+      "exit_code": { "kind": "zero" },
+      "stdout": { "not_contains": ["debug"], "empty": false },
+      "stderr": { "empty": true },
+      "stdout_json": [
+        { "pointer": "/ok", "equals": true },
+        { "pointer": "/greeting", "equals": "hello" }
+      ]
+    }
+  ]
+}

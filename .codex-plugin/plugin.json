@@ -1,0 +1,35 @@
+{
+  "name": "moonbit-guardian",
+  "version": "0.1.0+codex.20260920110929",
+  "description": "Version-aware MoonBit guidance and reproducible delivery verification for Codex.",
+  "author": {
+    "name": "MoonBit Guardian Contributors"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "moonbit",
+    "mcp",
+    "verification",
+    "developer-tools"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "MoonBit Guardian",
+    "shortDescription": "Guide and verify MoonBit development locally.",
+    "longDescription": "A community plugin that gives Codex version-aware MoonBit guidance, real API lookup, compiler evidence, and contract-based CLI delivery verification.",
+    "developerName": "MoonBit Guardian Contributors",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Local tools",
+      "Project inspection",
+      "Delivery verification"
+    ],
+    "defaultPrompt": [
+      "Use MoonBit Guardian to inspect this project before changing it.",
+      "Check this MoonBit project and fix errors using verified evidence.",
+      "Verify this CLI against its delivery contract and report gaps."
+    ],
+    "brandColor": "#F4A261"
+  },
+  "mcpServers": "./.mcp.json"
+}

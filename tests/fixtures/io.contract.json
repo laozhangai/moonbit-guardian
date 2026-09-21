@@ -1,0 +1,45 @@
+{
+  "version": "1",
+  "cases": [
+    {
+      "id": "stdin 到 EOF",
+      "program": "node",
+      "args": [
+        "-e",
+        "process.stdin.setEncoding('utf8');let s='';process.stdin.on('data',c=>s+=c);process.stdin.on('end',()=>process.stdout.write(s.toUpperCase()))"
+      ],
+      "stdin": "hello\n",
+      "exit_code": { "kind": "zero" },
+      "stdout": { "exact": "HELLO\n" },
+      "stderr": { "empty": true }
+    },
+    {
+      "id": "fixture 隔离",
+      "program": "node",
+      "args": [
+        "-e",
+        "process.stdout.write(require('fs').readFileSync('data/input.txt','utf8'))"
+      ],
+      "fixtures": [
+        { "path": "data/input.txt", "content": "fixture-ok" }
+      ],
+      "exit_code": { "kind": "zero" },
+      "stdout": { "exact": "fixture-ok" },
+      "stderr": { "empty": true }
+    },
+    {
+      "id": "Windows 反斜杠 fixture",
+      "program": "node",
+      "args": [
+        "-e",
+        "process.stdout.write(require('fs').readFileSync('nested/value.txt','utf8'))"
+      ],
+      "fixtures": [
+        { "path": "nested\\value.txt", "content": "backslash-ok" }
+      ],
+      "exit_code": { "kind": "zero" },
+      "stdout": { "exact": "backslash-ok" },
+      "stderr": { "empty": true }
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "MoonBit Guardian"
+  short_description: "Version-aware MoonBit guidance and verification"
+  default_prompt: "Use $moonbit-guardian to inspect, develop, and verify this MoonBit project with reproducible evidence."

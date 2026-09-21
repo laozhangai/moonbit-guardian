@@ -1,0 +1,14 @@
+{
+  "version": "1",
+  "cases": [
+    {
+      "id": "输出求和结果",
+      "program": "moon",
+      "args": ["run", "cmd/main", "--target", "wasm-gc"],
+      "cwd": "project",
+      "exit_code": { "kind": "zero" },
+      "stdout": { "exact": "sum=6\n" },
+      "stderr": { "empty": true }
+    }
+  ]
+}
