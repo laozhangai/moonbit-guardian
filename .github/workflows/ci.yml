@@ -1,0 +1,69 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows-x64
+          - os: ubuntu-latest
+            platform: linux-x64
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install MoonBit on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+          Invoke-RestMethod https://cli.moonbitlang.com/install/powershell.ps1 | Invoke-Expression
+          "${env:USERPROFILE}\.moon\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Install native compiler on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install llvm -y --no-progress
+
+      - name: Install MoonBit on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Build Windows release
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/build-release.ps1 -Platform windows-x64
+
+      - name: Build Linux release
+        if: runner.os == 'Linux'
+        shell: bash
+        run: bash ./scripts/build-release.sh
+
+      - name: Validate resources and examples
+        shell: pwsh
+        run: |
+          node scripts/validate-resources.mjs
+          node scripts/validate-examples.mjs
+
+      - name: MCP end-to-end smoke
+        shell: pwsh
+        run: node tests/mcp-smoke.mjs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: moonbit-guardian-${{ matrix.platform }}
+          path: dist/${{ matrix.platform }}/
