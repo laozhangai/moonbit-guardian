@@ -61,6 +61,7 @@ cd ..
 node scripts/validate-resources.mjs
 node scripts/validate-examples.mjs
 node tests/mcp-smoke.mjs
+node scripts/self-test.mjs
 ```
 
 Use `scripts/build-release.ps1 -Platform windows-x64` on Windows. Linux builds use the analogous
