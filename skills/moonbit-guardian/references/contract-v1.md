@@ -20,7 +20,7 @@ Each case supports:
 | `stdin` | no | Complete input; Guardian supplies EOF after the value. |
 | `fixtures` | no | Relative `{ "path", "content" }` files written below the case temp directory. |
 | `timeout_ms` | no | 1-60000; default 10000. |
-| `output_limit` | no | Maximum retained characters per stream; default 1048576. |
+| `output_limit` | no | Maximum retained characters per stream; 1-8388608, default 1048576. |
 | `exit_code` | yes | `{ "kind": "zero" }`, `nonzero`, or `{ "kind": "exact", "value": 2 }`. |
 | `stdout`, `stderr` | no | Text expectation object. |
 | `stdout_json` | no | JSON Pointer equality assertions. |

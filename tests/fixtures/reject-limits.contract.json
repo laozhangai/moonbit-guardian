@@ -1,0 +1,23 @@
+{
+  "version": "1",
+  "cases": [
+    {
+      "id": "timeout 超出上限",
+      "program": "node",
+      "timeout_ms": 60001,
+      "exit_code": { "kind": "zero" }
+    },
+    {
+      "id": "output_limit 不能为零",
+      "program": "node",
+      "output_limit": 0,
+      "exit_code": { "kind": "zero" }
+    },
+    {
+      "id": "timeout 类型错误",
+      "program": "node",
+      "timeout_ms": "fast",
+      "exit_code": { "kind": "zero" }
+    }
+  ]
+}
