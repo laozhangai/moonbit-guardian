@@ -33,6 +33,7 @@ if (-not (Get-Command clang -ErrorAction SilentlyContinue)) {
 
 Push-Location $coreRoot
 try {
+  moon update
   moon check --deny-warn --target native
   moon test --target native
   moon build cmd/server --target native --release

@@ -48,6 +48,7 @@ not a proof of complete program correctness.
 
 ```powershell
 cd core
+moon update
 moon check --deny-warn --target native
 moon test --target native
 moon check --deny-warn --target wasm-gc

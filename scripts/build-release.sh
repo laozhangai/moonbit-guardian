@@ -5,6 +5,7 @@ plugin_root="$(cd "$(dirname "$0")/.." && pwd)"
 core_root="$plugin_root/core"
 
 cd "$core_root"
+moon update
 moon check --deny-warn --target native
 moon test --target native
 moon build cmd/server --target native --release
