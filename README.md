@@ -15,6 +15,9 @@ Guardian does not provide a model or upload source code. Code generation remains
 existing AI coding client. The service invokes the user's installed MoonBit toolchain and reports
 only checks it actually ran.
 
+Guidance responses include the current project's observed `moon version --all` output when the
+toolchain is available; the version is never inferred from the plugin's release metadata.
+
 ## Requirements
 
 - Windows x64 or Linux x64;
